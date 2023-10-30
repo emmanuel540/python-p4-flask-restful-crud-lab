@@ -46,6 +46,41 @@ class PlantByID(Resource):
     def get(self, id):
         plant = Plant.query.filter_by(id=id).first().to_dict()
         return make_response(jsonify(plant), 200)
+    
+    
+    def delete(self,id):
+        deleted_reco = Plant.query.filter_by(id=id).first()
+        db.session.delete(deleted_reco)
+        db.session.commit()
+        response = make_response("",204)
+        return response
+    @app.route("/plants/<int:id>",methods = ["PATCH"])
+    def patch(id):
+        patch_by_id = Plant.query.filter_by(id=id).first()
+
+        # Check if the plant with the specified ID exists
+        if not patch_by_id:
+            return jsonify({"error": "Plant not found"}), 404
+
+        # Parse JSON data from the request's body
+        data = request.get_json()
+
+        # Check if data is valid JSON
+        if not data:
+            return jsonify({"error": "Invalid JSON data"}), 400
+
+        # Update plant attributes based on the JSON data
+        for key, value in data.items():
+            setattr(patch_by_id, key, value)
+
+        # Commit the changes to the database
+        db.session.commit()
+
+        # Convert the updated plant to a dictionary
+        response_dict = patch_by_id.to_dict()
+
+        # Return the updated plant as a JSON response
+        return jsonify(response_dict), 200
 
 
 api.add_resource(PlantByID, '/plants/<int:id>')
